@@ -25,12 +25,12 @@ runs:
   using: "composite"
   steps:
     - name: Set up config
-      run: cp config/config.py.template config/config.py 
+      run: cp src/config/config.py.template src/config/config.py 
     - name: Set API version
-      run: sed -i 's/VERSION_PLACEHOLDER/${{inputs.api_version}}/g' config/config.py
+      run: sed -i 's/VERSION_PLACEHOLDER/${{inputs.api_version}}/g' src/config/config.py
       shell: bash
     - name: Set Log Level
-      run: sed -i 's/INFO/${{inputs.log_level}}/g' config/config.py
+      run: sed -i 's/INFO/${{inputs.log_level}}/g' src/config/config.py
       shell: bash
     - name: Set Path to App
       run: sed -i 's@DEPLOY_PATH@${{inputs.deploy_path}}@g' ${{inputs.app_path}}
