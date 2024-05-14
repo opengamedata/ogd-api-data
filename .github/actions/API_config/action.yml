@@ -26,6 +26,7 @@ runs:
   steps:
     - name: Set up config
       run: cp src/config/config.py.template src/config/config.py 
+      shell: bash
     - name: Set API version
       run: sed -i 's/VERSION_PLACEHOLDER/${{inputs.api_version}}/g' src/config/config.py
       shell: bash
