@@ -1,5 +1,5 @@
 # Specific files to ignore
-shared/config/*config.py
+config/*config.py
 tests/t_config.py
 tests/Makefile
 .vscode
