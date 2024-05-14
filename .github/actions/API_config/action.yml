@@ -13,14 +13,14 @@ inputs:
     description: "The level of debug output to print"
     required: false
     default: "INFO"
-  app_path:
-    description: "The name of the wsgi app being deployed"
-    required: true
-    default: "data.wsgi"
   deploy_path:
     description: "The path on the server in which the app is deployed"
     required: true
     default: '/var/www/wsgi-bin'
+  app_path:
+    description: "The name of the wsgi app being deployed"
+    required: false
+    default: "src/data.wsgi"
 runs:
   using: "composite"
   steps:

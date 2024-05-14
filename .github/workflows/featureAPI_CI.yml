@@ -30,7 +30,6 @@ jobs:
       with:
         api_version: ${{ github.event.release.tag_name }}
         log_level: "INFO"
-        app_path: "apps/features/data.wsgi"
         deploy_path: ${{ env.DEPLOY_DIR }}
     - name: Set up Core Config File
       uses: ./.github/actions/OGD_config
