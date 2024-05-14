@@ -11,7 +11,7 @@ from mysql.connector.connection import MySQLConnection
 from typing import Any, Dict, Union
 # import locals
 from ogd.core.interfaces.MySQLInterface import SQL
-from shared.config.config import settings
+from config.config import settings
 
 class ClassroomAPI:
     @staticmethod
