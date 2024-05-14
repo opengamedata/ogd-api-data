@@ -26,7 +26,7 @@ class DataAPIConfigSchema(ServerConfigSchema):
         self._version          : int
 
         if "GOOGLE_CLIENT_ID" in all_elements.keys():
-            self._google_client_id = ServerConfigSchema._parseGoogleID(google_id=all_elements["GOOGLE_CLIENT_ID"], logger=logger)
+            self._google_client_id = DataAPIConfigSchema._parseGoogleID(google_id=all_elements["GOOGLE_CLIENT_ID"], logger=logger)
         else:
             self._google_client_id = "UNKNOWN ID"
             logger.warn(f"{name} config does not have a 'GOOGLE_CLIENT_ID' element; defaulting to google_client_id={self._google_client_id}", logging.WARN)
