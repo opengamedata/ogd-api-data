@@ -114,7 +114,7 @@ except ImportError as err:
 except Exception as err:
     _logImportErr(msg="Could not import Hello API, general error:", err=err)
 else:
-    HelloAPI.register(application)
+    HelloAPI.register(app=application, server_config=_server_cfg)
     
 # if __name__ == '__main__':
 # 	application.run(debug=True)
