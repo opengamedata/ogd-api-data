@@ -1,6 +1,6 @@
 """Module for the Session API code
 """
-# import libraries
+# import standard libraries
 import os
 import traceback
 from datetime import datetime, timedelta
@@ -10,7 +10,7 @@ from typing import List, Optional, Union
 from flask import Flask, Response, current_app
 from flask_restful import Resource, Api, reqparse
 from flask_restful.inputs import datetime_from_iso8601
-# import locals
+# import OGD libraries
 from ogd.core.interfaces.DataInterface import DataInterface
 from ogd.core.interfaces.outerfaces.DictionaryOuterface import DictionaryOuterface
 from ogd.core.managers.ExportManager import ExportManager
@@ -20,18 +20,20 @@ from ogd.core.schemas.ExportMode import ExportMode
 from ogd.core.schemas.configs.ConfigSchema import ConfigSchema
 from ogd.core.schemas.configs.GameSourceSchema import GameSourceSchema
 from ogd.core.schemas.games.GameSchema import GameSchema
-from shared.schemas.ServerConfigSchema import ServerConfigSchema
-from shared.utils.APIResponse import APIResponse, RESTType, ResponseStatus
-from shared.utils import APIUtils
+from ogd.apis.utils.APIResponse import APIResponse, RESTType, ResponseStatus
+from ogd.apis.utils import APIUtils
+
+# import local files
+from schemas.DataAPIConfigSchema import DataAPIConfigSchema
 
 class SessionAPI:
     """Class to define an API for the developer/designer dashboard"""
 
-    ogd_core   : Path
-    ogd_config : ConfigSchema
+    server_config   : DataAPIConfigSchema
+    ogd_config      : ConfigSchema
 
     @staticmethod
-    def register(app:Flask, server_settings:ServerConfigSchema, core_settings:ConfigSchema):
+    def register(app:Flask, server_settings:DataAPIConfigSchema, core_settings:ConfigSchema):
         """Sets up the dashboard api in a flask app.
 
         :param app: _description_
@@ -43,8 +45,8 @@ class SessionAPI:
         api.add_resource(SessionAPI.SessionsMetrics, '/sessions/metrics')
         api.add_resource(SessionAPI.SessionMetrics, '/session/metrics')
         api.add_resource(SessionAPI.SessionFeatureList, '/sessions/metrics/list/<game_id>')
-        SessionAPI.ogd_core = server_settings.OGDCore
-        SessionAPI.ogd_config = core_settings
+        SessionAPI.server_config = server_settings
+        SessionAPI.ogd_config    = core_settings
 
     class SessionFeatureList(Resource):
         """Class for getting a full list of features for a given game."""
@@ -62,7 +64,7 @@ class SessionAPI:
             try:
                 feature_list = []
 
-                _schema = GameSchema(game_id=game_id)
+                _schema = GameSchema.FromFile(game_id=game_id)
                 for name,percount in _schema.PerCountFeatures.items():
                     if ExportMode.SESSION in percount.Enabled:
                         feature_list.append(name)
@@ -109,7 +111,7 @@ class SessionAPI:
                 _start_time = args.get('start_datetime', _start_time)
         # 3. Set up OGD Range based on data in Web Request
                 _range : Union[ExporterRange, None] = None
-                _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=game_id)
+                _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=game_id, core_config=SessionAPI.ogd_config)
                 if _interface is not None:
                     _range = ExporterRange.FromDateRange(source=_interface, date_min=_start_time, date_max=_end_time)
             except Exception as err:
@@ -160,7 +162,7 @@ class SessionAPI:
                 ogd_result : RequestResult = RequestResult(msg="Empty result")
                 values_dict = {}
 
-                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id)
+                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id, core_config=SessionAPI.ogd_config)
                 if _metrics is not None and _interface is not None:
                     _range      = ExporterRange.FromIDs(source=_interface, ids=[_session_id], id_mode=IDMode.SESSION)
                     _exp_types  = {ExportMode.SESSION}
@@ -240,7 +242,7 @@ class SessionAPI:
                 values_dict = {}
                 
         # 3. Set up OGD Request based on data in Web Request
-                _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=_game_id)
+                _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=_game_id, core_config=SessionAPI.ogd_config)
                 if _metrics is not None and _session_ids is not None and _interface is not None:
                     _range      = ExporterRange.FromIDs(source=_interface, ids=_session_ids, id_mode=IDMode.SESSION)
                     _exp_types  = {ExportMode.SESSION}

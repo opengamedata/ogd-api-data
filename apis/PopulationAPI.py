@@ -1,11 +1,16 @@
-"""Module for the Population API code
 """
-# import libraries
+PopulationAPI
+
+Module for the Population API code
+"""
+
+# import standard libraries
 import json
 import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Optional
+
 # import 3rd-party libraries
 from flask import Flask, Response, current_app
 from flask import request as flask_request
@@ -13,7 +18,8 @@ from flask_cors import CORS
 from flask_restful import Resource, Api
 from flask_restful.inputs import datetime_from_iso8601
 from flask_restful.reqparse import Argument, RequestParser
-# import locals
+
+# import OGD libraries
 from ogd.core.interfaces.DataInterface import DataInterface
 from ogd.core.interfaces.outerfaces.DictionaryOuterface import DictionaryOuterface
 from ogd.core.managers.ExportManager import ExportManager
@@ -23,18 +29,20 @@ from ogd.core.schemas.ExportMode import ExportMode
 from ogd.core.schemas.configs.ConfigSchema import ConfigSchema
 from ogd.core.schemas.configs.GameSourceSchema import GameSourceSchema
 from ogd.core.schemas.games.GameSchema import GameSchema
-from shared.schemas.ServerConfigSchema import ServerConfigSchema
-from shared.utils.APIResponse import APIResponse, RESTType, ResponseStatus
-from shared.utils import APIUtils
+from ogd.apis.utils.APIResponse import APIResponse, RESTType, ResponseStatus
+from ogd.apis.utils import APIUtils
+
+# import local files
+from schemas.DataAPIConfigSchema import DataAPIConfigSchema
 
 class PopulationAPI:
     """Class to define an API for the developer/designer dashboard"""
 
-    ogd_core   : Path
-    ogd_config : ConfigSchema
+    server_config   : DataAPIConfigSchema
+    ogd_config      : ConfigSchema
 
     @staticmethod
-    def register(app:Flask, server_settings:ServerConfigSchema, core_settings:ConfigSchema):
+    def register(app:Flask, server_settings:DataAPIConfigSchema, core_settings:ConfigSchema):
         """Sets up the dashboard api in a flask app.
 
         :param app: _description_
@@ -45,8 +53,8 @@ class PopulationAPI:
         api = Api(app)
         api.add_resource(PopulationAPI.PopulationMetrics, '/populations/metrics')
         api.add_resource(PopulationAPI.PopulationFeatureList, '/populations/metrics/list/<game_id>')
-        PopulationAPI.ogd_core = server_settings.OGDCore
-        PopulationAPI.ogd_config = core_settings
+        PopulationAPI.server_config = server_settings
+        PopulationAPI.ogd_config    = core_settings
 
     class PopulationFeatureList(Resource):
         """Class for getting a full list of features for a given game."""
@@ -64,7 +72,7 @@ class PopulationAPI:
             try:
                 feature_list = []
 
-                _schema = GameSchema(game_id=game_id)
+                _schema = GameSchema.FromFile(game_id=game_id)
                 for name,percount in _schema.PerCountFeatures.items():
                     if ExportMode.POPULATION in percount.Enabled:
                         feature_list.append(name)
@@ -122,7 +130,7 @@ class PopulationAPI:
                 ogd_result : RequestResult = RequestResult(msg="No Export")
                 values_dict = {}
 
-                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id)
+                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id, core_config=PopulationAPI.ogd_config)
                 if _metrics is not None and _interface is not None:
                     _range      = ExporterRange.FromDateRange(source=_interface, date_min=_start_time, date_max=_end_time)
                     _exp_types  = {ExportMode.POPULATION}

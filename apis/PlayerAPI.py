@@ -1,6 +1,6 @@
 """Module for the Player API code
 """
-# import libraries
+# import standard libraries
 import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 from flask import Flask, Response, current_app
 from flask_restful import Resource, Api, reqparse
 from flask_restful.inputs import datetime_from_iso8601
-# import locals
+# import OGD libraries
 from ogd.core.interfaces.DataInterface import DataInterface
 from ogd.core.interfaces.outerfaces.DictionaryOuterface import DictionaryOuterface
 from ogd.core.managers.ExportManager import ExportManager
@@ -20,17 +20,20 @@ from ogd.core.schemas.IDMode import IDMode
 from ogd.core.schemas.ExportMode import ExportMode
 from ogd.core.schemas.configs.ConfigSchema import ConfigSchema
 from ogd.core.schemas.configs.GameSourceSchema import GameSourceSchema
-from shared.schemas.ServerConfigSchema import ServerConfigSchema
-from shared.utils.APIResponse import APIResponse, RESTType, ResponseStatus
-from shared.utils import APIUtils
+from ogd.apis.utils.APIResponse import APIResponse, RESTType, ResponseStatus
+from ogd.apis.utils import APIUtils
+
+# import local files
+from schemas.DataAPIConfigSchema import DataAPIConfigSchema
+
 class PlayerAPI:
     """Class to define an API for the developer/designer dashboard"""
 
-    ogd_core   : Path
-    ogd_config : ConfigSchema
+    server_config   : DataAPIConfigSchema
+    ogd_config      : ConfigSchema
 
     @staticmethod
-    def register(app:Flask, server_settings:ServerConfigSchema, core_settings:ConfigSchema):
+    def register(app:Flask, server_settings:DataAPIConfigSchema, core_settings:ConfigSchema):
         """Sets up the dashboard api in a flask app.
 
         :param app: _description_
@@ -42,8 +45,8 @@ class PlayerAPI:
         api.add_resource(PlayerAPI.PlayerFeatureList, '/players/metrics/list/<game_id>')
         api.add_resource(PlayerAPI.PlayersMetrics,    '/players/metrics')
         api.add_resource(PlayerAPI.PlayerMetrics,     '/player/metrics')
-        PlayerAPI.ogd_core = server_settings.OGDCore
-        PlayerAPI.ogd_config = core_settings
+        PlayerAPI.server_config = server_settings
+        PlayerAPI.ogd_config    = core_settings
 
     class PlayerFeatureList(Resource):
         """Class for getting a full list of features for a given game."""
@@ -61,7 +64,7 @@ class PlayerAPI:
             try:
                 feature_list = []
 
-                _schema = GameSchema(game_id=game_id)
+                _schema = GameSchema.FromFile(game_id=game_id)
                 for name,percount in _schema.PerCountFeatures.items():
                     if ExportMode.PLAYER in percount.Enabled:
                         feature_list.append(name)
@@ -109,7 +112,7 @@ class PlayerAPI:
             try:
         # 3. Set up OGD Range based on data in Web Request
                 result = {}
-                _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=game_id)
+                _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=game_id, core_config=PlayerAPI.ogd_config)
                 if _interface is not None:
                     _range = ExporterRange.FromDateRange(source=_interface, date_min=_start_time, date_max=_end_time)
                     result["ids"] = _range.IDs
@@ -163,7 +166,7 @@ class PlayerAPI:
                 ogd_result : RequestResult = RequestResult(msg="No Export")
                 values_dict = {}
 
-                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id)
+                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id, core_config=PlayerAPI.ogd_config)
                 if _metrics is not None and _interface is not None:
                     _range      = ExporterRange.FromIDs(source=_interface, ids=[_player_id], id_mode=IDMode.USER)
                     current_app.logger.info(f"The range is {_range.IDs}")
@@ -249,7 +252,7 @@ class PlayerAPI:
                 ogd_result : RequestResult = RequestResult(msg="No Export")
                 values_dict = {}
 
-                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id)
+                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id, core_config=PlayerAPI.ogd_config)
                 if _metrics is not None and _player_ids is not None and _interface is not None:
                     _range      = ExporterRange.FromIDs(source=_interface, ids=_player_ids, id_mode=IDMode.USER)
                     _exp_types  = set([ExportMode.PLAYER])
