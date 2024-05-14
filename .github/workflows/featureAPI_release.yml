@@ -1,19 +1,15 @@
 # Workflow to build and deploy designer dashboard to server.
 name: OpenGameData Features API CI
 on:
-  push:
-    paths:
-    - '.github/workflows/featureAPI_CI.yml'
-    - '.github/actions/**'
-    - 'shared/**'
-    - 'apps/features/**'
-  workflow_dispatch: # Allow manual trigger of this workflow from the Actions tab
+  workflow_dispatch:
+  release:
+    types: released
 
 env:
-  DEPLOY_HOST: ${{ vars.OGD_STAGING_HOST }}
-  DEPLOY_DIR:  ${{ vars.WSGI_PATH }}/${{ github.event.repository.name }}/${{ github.ref_name }}/features
-  DEPLOY_URL:  ${{ vars.OGD_STAGING_HOST }}/wsgi-bin/${{ github.event.repository.name }}/${{ github.ref_name }}/features
-  URL_PATH:    wsgi-bin/${{ github.event.repository.name }}/${{ github.ref_name }}/features
+  DEPLOY_HOST: ${{ vars.OGD_SERVICES_HOST }}
+  DEPLOY_DIR:  ${{ vars.WSGI_PATH }}/${{ vars.API_BASE_PATH }}/data/
+  DEPLOY_URL:  ${{ vars.OGD_SERVICES_HOST }}/${{ vars.API_BASE_URL }}/data/data.wsgi
+  URL_PATH:                                  ${{ vars.API_BASE_URL }}/data/data.wsgi
 
 jobs:
   ci_deploy:
@@ -59,16 +55,7 @@ jobs:
     - name: Ensure directory exists
       run: ssh -o StrictHostKeyChecking=no -T -i ./key.txt ${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "mkdir -p ${{ env.DEPLOY_DIR }}"
 
-    - name: Upload *shared code* to web server via rsync
-      uses: burnett01/rsync-deployments@5.2
-      with:
-        switches: -vrc --exclude-from rsync-exclude
-        path: shared/*
-        remote_path: ${{ env.DEPLOY_DIR }}/shared
-        remote_host: ${{ env.DEPLOY_HOST }}
-        remote_user: ${{ secrets.DEPLOY_USER }}
-        remote_key:  ${{ secrets.DEPLOY_KEY  }}
-    - name: Upload *App* to web server via rsync
+    - name: Upload to web server via rsync
       uses: burnett01/rsync-deployments@5.2
       with:
         switches: -vrc --exclude-from rsync-exclude
@@ -80,11 +67,11 @@ jobs:
     - name: Upload OGD access key
       run: |
         echo '${{secrets.OGD_SELECTOR_BQ_KEY}}' >> ./ogd.json
-        scp -o StrictHostKeyChecking=no -i ./key.txt ./ogd.json ${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{env.DEPLOY_DIR}}/shared/config/ogd.json
+        scp -o StrictHostKeyChecking=no -i ./key.txt ./ogd.json ${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{env.DEPLOY_DIR}}/config/ogd.json
 
   # 4. Cleanup & complete
     - name: Trigger Graceful Reboot
-      run: ssh -o StrictHostKeyChecking=no -T -i ./key.txt ${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "sudo apachectl -k graceful"
+      run: ssh -o StrictHostKeyChecking=no -T -i ./key.txt ${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "sudo systemctl restart apache2"
     - name: Announce deploy
       run: echo "Deployed to ${{ env.DEPLOY_URL }}"
     - name: Upload logs as artifacts
