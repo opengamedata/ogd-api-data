@@ -10,11 +10,11 @@ from flask import Flask
 # import OGD libraries
 from ogd.core.schemas.configs.ConfigSchema import ConfigSchema
 from ogd.core.utils.Logger import Logger
-from ogd.apis.schemas.ServerConfigSchema import ServerConfigSchema
 
 # import local files
 from config.config import settings as srv_settings
 from config.coreconfig import settings as core_settings
+from schemas.DataAPIConfigSchema import DataAPIConfigSchema
 
 # By default we'll log to WSGI errors stream which ends up in the Apache error log
 logHandlers : Dict[str, Any] = {
@@ -60,8 +60,8 @@ dictConfig({
 
 application = Flask(__name__)
 
-_server_cfg = ServerConfigSchema(name="DataAppConfiguration", all_elements=srv_settings, logger=application.logger)
-_core_cfg   = ConfigSchema(      name="OGDConfiguration",     all_elements=core_settings)
+_server_cfg = DataAPIConfigSchema(name="DataAPIConfiguration", all_elements=srv_settings, logger=application.logger)
+_core_cfg   = ConfigSchema(       name="OGDConfiguration",     all_elements=core_settings)
 
 application.logger.setLevel(_server_cfg.DebugLevel)
 application.secret_key = b'thisisafakesecretkey'
