@@ -1,5 +1,5 @@
 settings = {
     "GOOGLE_CLIENT_ID":"client_id",
     "DEBUG_LEVEL":"INFO",
-    "VER":0
+    "VER":"VERSION_PLACEHOLDER"
 }
