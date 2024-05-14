@@ -71,14 +71,14 @@ def _logImportErr(msg:str, err:Exception):
     application.logger.exception(err)
 Logger.InitializeLogger(level=logging.INFO, use_logfile=False)
 
-try:
-    from apis.ClassroomAPI import ClassroomAPI
-except ImportError as err:
-    _logImportErr(msg="Could not import Classroom API:", err=err)
-except Exception as err:
-    _logImportErr(msg="Could not import Classroom API, general error:", err=err)
-else:
-    ClassroomAPI.register(application)
+# try:
+#     from apis.ClassroomAPI import ClassroomAPI
+# except ImportError as err:
+#     _logImportErr(msg="Could not import Classroom API:", err=err)
+# except Exception as err:
+#     _logImportErr(msg="Could not import Classroom API, general error:", err=err)
+# else:
+#     ClassroomAPI.register(application)
 
 try:
     from apis.PopulationAPI import PopulationAPI
