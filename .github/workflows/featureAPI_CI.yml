@@ -28,7 +28,6 @@ jobs:
     - name: Set up Config File
       uses: ./.github/actions/API_config
       with:
-        api_version: ${{ github.event.release.tag_name }}
         log_level: "INFO"
         deploy_path: ${{ env.DEPLOY_DIR }}
     - name: Set up Core Config File
