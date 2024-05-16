@@ -27,11 +27,11 @@ inputs:
     default: 'password placeholder'
   slice_size:
     description: "Number of sessions to process at a time"
-    required: true
+    required: false
     default: 1000
   log_level:
     description: "Logging level to use for export process"
-    required: true
+    required: false
     default: "INFO"
 runs:
   using: "composite"
