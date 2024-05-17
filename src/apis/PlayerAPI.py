@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 from flask import Flask, Response, current_app
 from flask_restful import Resource, Api, reqparse
 from flask_restful.inputs import datetime_from_iso8601
+from werkzeug.exceptions import BadRequest
 # import OGD libraries
 from ogd.core.interfaces.DataInterface import DataInterface
 from ogd.core.interfaces.outerfaces.DictionaryOuterface import DictionaryOuterface
@@ -144,11 +145,12 @@ class PlayerAPI:
             :rtype: _type_
             """
             current_app.logger.info(f"Received player metric request.")
-            api_result = APIResponse.Default(req_type=RESTType.GET)
+            api_result = APIResponse.Default(req_type=RESTType.POST)
 
         # 1. Set up variables and parser for Web Request
             _game_id   : str = "UNKOWN"
             _player_id : str = "UNKOWN"
+            _metrics   : List[Any] = []
 
             parser = reqparse.RequestParser()
             parser.add_argument("game_id",   location='form', type=str, nullable=False, required=True)
@@ -161,51 +163,63 @@ class PlayerAPI:
 
                 _game_id   =                     args.get("game_id",   _game_id)
                 _player_id =                     args.get("player_id", _player_id)
-                _metrics   = APIUtils.parse_list(args.get('metrics',   ""))
+                _metrics   = APIUtils.parse_list(args.get('metrics',   "")) or []
+            except BadRequest as err:
+                api_result.ServerErrored(f"{type(err).__name__} error while processing Player request")
+                current_app.logger.error(f"Got exception for Player request:\ngame={_game_id}, player={_player_id}\nerror={str(err)}")
+                current_app.logger.error(traceback.format_exc())
+            else:
         # 3. Set up OGD Request based on data in Web Request
-                ogd_result : RequestResult = RequestResult(msg="No Export")
-                values_dict = {}
+                api_result = self._executeRequest(game_id=_game_id, player_id=_player_id, metrics=_metrics)
+            finally:
+                return Response(response=api_result.AsJSON, status=api_result.Status.value, mimetype='application/json')
 
-                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id, core_config=PlayerAPI.ogd_config)
-                if _metrics is not None and _interface is not None:
-                    _range      = ExporterRange.FromIDs(source=_interface, ids=[_player_id], id_mode=IDMode.USER)
+        def _executeRequest(self, game_id:str, player_id:str, metrics:List[str]):
+            ret_val : APIResponse = APIResponse.Default(req_type=RESTType.POST)
+
+            ogd_result : RequestResult = RequestResult(msg="No Export")
+            values_dict = {}
+
+            try:
+                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=game_id, core_config=PlayerAPI.ogd_config)
+                if metrics is not None and _interface is not None:
+                    _range      = ExporterRange.FromIDs(source=_interface, ids=[player_id], id_mode=IDMode.USER)
                     current_app.logger.info(f"The range is {_range.IDs}")
                     _exp_types  = set([ExportMode.PLAYER])
-                    _outerface  = DictionaryOuterface(game_id=_game_id, config=GameSourceSchema.EmptySchema(), export_modes=_exp_types, out_dict=values_dict)
+                    _outerface  = DictionaryOuterface(game_id=game_id, config=GameSourceSchema.EmptySchema(), export_modes=_exp_types, out_dict=values_dict)
                     ogd_request = Request(interface=_interface,      range=_range,
-                                          exporter_modes=_exp_types, outerfaces={_outerface},
-                                          feature_overrides=_metrics
+                                        exporter_modes=_exp_types, outerfaces={_outerface},
+                                        feature_overrides=metrics
                     )
         # 4. Run OGD with the Request
                     export_mgr = ExportManager(config=PlayerAPI.ogd_config)
                     ogd_result = export_mgr.ExecuteRequest(request=ogd_request)
                     current_app.logger.info(f"Result: {ogd_result.Message}")
-                elif _metrics is None:
+                elif metrics is None:
                     current_app.logger.warning("_metrics was None")
                 elif _interface is None:
                     current_app.logger.warning("_interface was None")
-                # os.chdir(orig_cwd)
             except Exception as err:
-                api_result.ServerErrored(f"{type(err).__name__} error while processing Player request")
-                current_app.logger.error(f"Got exception for Player request:\ngame={_game_id}, player={_player_id}\nerror={str(err)}")
+                ret_val.ServerErrored(f"{type(err).__name__} error while processing Player request")
+                current_app.logger.error(f"Got exception for Player request:\ngame={game_id}, player={player_id}\nerror={str(err)}")
                 current_app.logger.error(traceback.format_exc())
             else:
         # 5. If request succeeded, get into return format and send back data.
                 current_app.logger.info(f"The values_dict:\n{values_dict}")
                 cols    = values_dict.get("players", {}).get("cols", [])
                 players = values_dict.get("players", {}).get("vals", [[]])
-                player = self._findPlayer(player_list=players, target_id=_player_id)
+                player = self._findPlayer(player_list=players, target_id=player_id)
                 ct = min(len(cols), len(player))
                 if ct > 0:
-                    api_result.RequestSucceeded(
+                    ret_val.RequestSucceeded(
                         msg="Generated features for the given session",
                         val={cols[i] : player[i] for i in range(ct)}
                     )
                 else:
                     current_app.logger.warn(f"Couldn't find anything in result[player], result was:\n{ogd_result}")
-                    api_result.RequestErrored("No valid session features")
+                    ret_val.RequestErrored("No valid session features")
             finally:
-                return Response(response=api_result.AsJSON, status=api_result.Status.value, mimetype='application/json')
+                return ret_val
 
         def _findPlayer(self, player_list, target_id):
             current_app.logger.info(f"The list of players is {player_list}")
