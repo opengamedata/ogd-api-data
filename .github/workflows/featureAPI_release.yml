@@ -9,7 +9,6 @@ env:
   DEPLOY_HOST: ${{ vars.OGD_SERVICES_HOST }}
   DEPLOY_DIR:  ${{ vars.WSGI_PATH }}/${{ vars.API_BASE_PATH }}/data/
   DEPLOY_URL:  ${{ vars.OGD_SERVICES_HOST }}/${{ vars.API_BASE_URL }}/data/data.wsgi
-  URL_PATH:                                  ${{ vars.API_BASE_URL }}/data/data.wsgi
 
 jobs:
   ci_deploy:
