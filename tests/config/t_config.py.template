@@ -1,0 +1,7 @@
+settings = {
+    "EXTERN_ENDPOINT":"ENDPOINT_PLACEHOLDER",
+    "VERBOSE":False,
+    "ENABLED" : {
+        "HELLO":True,
+    }
+}
