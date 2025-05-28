@@ -9,7 +9,7 @@ from flask import Flask
 
 # import OGD libraries
 from ogd.core.schemas.configs.ConfigSchema import ConfigSchema
-from ogd.core.utils.Logger import Logger
+from ogd.common.utils.Logger import Logger
 
 # import local files
 from config.config import settings as srv_settings
@@ -108,7 +108,7 @@ else:
     SessionAPI.register(application, server_settings=_server_cfg, core_settings=_core_cfg)
 
 try:
-    from ogd.apis.utils.HelloAPI import HelloAPI
+    from ogd.apis.HelloAPI import HelloAPI
 except ImportError as err:
     _logImportErr(msg="Could not import Hello API:", err=err)
 except Exception as err:
