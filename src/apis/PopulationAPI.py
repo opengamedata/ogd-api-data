@@ -20,7 +20,7 @@ from flask_restful.inputs import datetime_from_iso8601
 from flask_restful.reqparse import Argument, RequestParser
 
 # import OGD libraries
-from ogd.core.interfaces.DataInterface import DataInterface
+# from ogd.core.interfaces.DataInterface import DataInterface
 from ogd.core.interfaces.outerfaces.DictionaryOuterface import DictionaryOuterface
 from ogd.core.managers.ExportManager import ExportManager
 from ogd.core.requests.Request import Request, ExporterRange
@@ -130,7 +130,8 @@ class PopulationAPI:
                 ogd_result : RequestResult = RequestResult(msg="No Export")
                 values_dict = {}
 
-                _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id, core_config=PopulationAPI.ogd_config)
+                # _interface : Optional[DataInterface] = APIUtils.gen_interface(game_id=_game_id, core_config=PopulationAPI.ogd_config)
+                _interface = APIUtils.gen_interface(game_id=_game_id, core_config=PopulationAPI.ogd_config)
                 if _metrics is not None and _interface is not None:
                     _range      = ExporterRange.FromDateRange(source=_interface, date_min=_start_time, date_max=_end_time)
                     _exp_types  = {ExportMode.POPULATION}

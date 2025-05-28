@@ -11,14 +11,14 @@ from flask_restful import Resource, Api, reqparse
 from flask_restful.inputs import datetime_from_iso8601
 from werkzeug.exceptions import BadRequest
 # import OGD libraries
-from ogd.core.interfaces.DataInterface import DataInterface
+# from ogd.core.interfaces.DataInterface import DataInterface
 from ogd.core.interfaces.outerfaces.DictionaryOuterface import DictionaryOuterface
 from ogd.core.managers.ExportManager import ExportManager
 from ogd.core.requests.Request import Request, ExporterRange
 from ogd.core.requests.RequestResult import RequestResult
 from ogd.core.schemas.games.GameSchema import GameSchema
-from ogd.core.schemas.IDMode import IDMode
-from ogd.core.schemas.ExportMode import ExportMode
+from ogd.core.models.enums.IDMode import IDMode
+from ogd.core.models.enums.ExportMode import ExportMode
 from ogd.core.schemas.configs.ConfigSchema import ConfigSchema
 from ogd.core.schemas.configs.GameSourceSchema import GameSourceSchema
 from ogd.apis.utils.APIResponse import APIResponse, RESTType, ResponseStatus
@@ -113,7 +113,8 @@ class PlayerAPI:
             try:
         # 3. Set up OGD Range based on data in Web Request
                 result = {}
-                _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=game_id, core_config=PlayerAPI.ogd_config)
+                # _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=game_id, core_config=PlayerAPI.ogd_config)
+                _interface = APIUtils.gen_interface(game_id=game_id, core_config=PlayerAPI.ogd_config)
                 if _interface is not None:
                     _range = ExporterRange.FromDateRange(source=_interface, date_min=_start_time, date_max=_end_time)
                     result["ids"] = _range.IDs

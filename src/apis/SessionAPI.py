@@ -11,12 +11,12 @@ from flask import Flask, Response, current_app
 from flask_restful import Resource, Api, reqparse
 from flask_restful.inputs import datetime_from_iso8601
 # import OGD libraries
-from ogd.core.interfaces.DataInterface import DataInterface
+# from ogd.core.interfaces.DataInterface import DataInterface
 from ogd.core.interfaces.outerfaces.DictionaryOuterface import DictionaryOuterface
 from ogd.core.managers.ExportManager import ExportManager
 from ogd.core.requests.Request import Request, ExporterRange, IDMode
 from ogd.core.requests.RequestResult import RequestResult
-from ogd.core.schemas.ExportMode import ExportMode
+from ogd.core.models.enums.ExportMode import ExportMode
 from ogd.core.schemas.configs.ConfigSchema import ConfigSchema
 from ogd.core.schemas.configs.GameSourceSchema import GameSourceSchema
 from ogd.core.schemas.games.GameSchema import GameSchema
@@ -111,7 +111,8 @@ class SessionAPI:
                 _start_time = args.get('start_datetime', _start_time)
         # 3. Set up OGD Range based on data in Web Request
                 _range : Union[ExporterRange, None] = None
-                _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=game_id, core_config=SessionAPI.ogd_config)
+                # _interface : Union[DataInterface, None] = APIUtils.gen_interface(game_id=game_id, core_config=SessionAPI.ogd_config)
+                _interface = APIUtils.gen_interface(game_id=game_id, core_config=SessionAPI.ogd_config)
                 if _interface is not None:
                     _range = ExporterRange.FromDateRange(source=_interface, date_min=_start_time, date_max=_end_time)
             except Exception as err:
