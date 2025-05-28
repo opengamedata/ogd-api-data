@@ -23,7 +23,7 @@ jobs:
       run: echo "Deploying ${{ github.repository }} to ${{ env.DEPLOY_URL }} via ${{ github.actor }}"
 
   # 1. Local checkout & config
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Config File
       uses: ./.github/actions/API_config
       with:
@@ -60,7 +60,7 @@ jobs:
       run: ssh -o StrictHostKeyChecking=no -T -i ./key.txt ${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "mkdir -p ${{ env.DEPLOY_DIR }}"
 
     - name: Upload to web server via rsync
-      uses: burnett01/rsync-deployments@5.2
+      uses: burnett01/rsync-deployments@7.0.1
       with:
         # switches:
         # -v : verbose output
