@@ -29,7 +29,7 @@ class DataAPIConfigSchema(ServerConfigSchema):
             self._google_client_id = DataAPIConfigSchema._parseGoogleID(google_id=all_elements["GOOGLE_CLIENT_ID"], logger=logger)
         else:
             self._google_client_id = "UNKNOWN ID"
-            logger.warn(f"{name} config does not have a 'GOOGLE_CLIENT_ID' element; defaulting to google_client_id={self._google_client_id}", logging.WARN)
+            logger.warning(f"{name} config does not have a 'GOOGLE_CLIENT_ID' element; defaulting to google_client_id={self._google_client_id}", logging.WARN)
 
         _used = {"DB_CONFIG", "OGD_CORE_PATH", "GOOGLE_CLIENT_ID"}
         _leftovers = { key : val for key,val in all_elements.items() if key not in _used }
@@ -53,5 +53,5 @@ class DataAPIConfigSchema(ServerConfigSchema):
             ret_val = google_id
         else:
             ret_val = str(google_id)
-            logger.warn(f"Google Client ID type was unexpected type {type(google_id)}, defaulting to google_client_id=str({ret_val}).", logging.WARN)
+            logger.warning(f"Google Client ID type was unexpected type {type(google_id)}, defaulting to google_client_id=str({ret_val}).", logging.WARN)
         return ret_val

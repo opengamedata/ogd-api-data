@@ -45,7 +45,7 @@ class TestConfigSchema(Schema):
             _extern_endpoint = TestConfigSchema.DEFAULT().ExternEndpoint
             _msg = f"{name} config does not have an 'EXTERN_ENDPOINT' element; defaulting to extern_endpoint={_extern_endpoint}"
             if logger:
-                logger.warn(_msg, logging.WARN)
+                logger.warning(_msg, logging.WARN)
             else:
                 print(logger)
         if "VERBOSE" in all_elements.keys():
@@ -54,7 +54,7 @@ class TestConfigSchema(Schema):
             _verbose = TestConfigSchema.DEFAULT().Verbose
             _msg = f"{name} config does not have an 'VERBOSE' element; defaulting to verbose={_verbose}"
             if logger:
-                logger.warn(_msg, logging.WARN)
+                logger.warning(_msg, logging.WARN)
             else:
                 print(_msg)
         if "ENABLED" in all_elements.keys():
@@ -63,7 +63,7 @@ class TestConfigSchema(Schema):
             _enabled_tests = TestConfigSchema.DEFAULT().EnabledTests
             _msg = f"{name} config does not have an 'ENABLED' element; defaulting to enabled={_enabled_tests}"
             if logger:
-                logger.warn(_msg, logging.WARN)
+                logger.warning(_msg, logging.WARN)
 
         _used = {"EXTERN_ENDPOINT", "VERBOSE", "ENABLED"}
         _leftovers = { key : val for key,val in all_elements.items() if key not in _used }
@@ -97,7 +97,7 @@ class TestConfigSchema(Schema):
             ret_val = str(endpoint)
             _msg = f"Config external endpoint was unexpected type {type(endpoint)}, defaulting to str(endpoint) = {ret_val}."
             if logger:
-                logger.warn(_msg, logging.WARN)
+                logger.warning(_msg, logging.WARN)
             else:
                 print(_msg)
         return ret_val
@@ -115,7 +115,7 @@ class TestConfigSchema(Schema):
             ret_val = bool(verbose)
             _msg = f"Config 'verbose' setting was unexpected type {type(verbose)}, defaulting to bool(verbose)={ret_val}."
             if logger:
-                logger.warn(_msg, logging.WARN)
+                logger.warning(_msg, logging.WARN)
             else:
                 print(_msg)
         return ret_val
@@ -129,7 +129,7 @@ class TestConfigSchema(Schema):
             ret_val = TestConfigSchema.DEFAULT().EnabledTests
             _msg = f"Config 'enabled tests' setting was unexpected type {type(enabled)}, defaulting to class default = {ret_val}."
             if logger:
-                logger.warn(_msg, logging.WARN)
+                logger.warning(_msg, logging.WARN)
             else:
                 print(_msg)
         return ret_val
