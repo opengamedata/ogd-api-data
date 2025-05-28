@@ -1,19 +1,18 @@
 # Workflow to clean out the directory where a deleted branch's files were deployed by CI
-name: OGD-Server Branch Delete Cleanup
+name: OGD Data API - Dead Branch Cleanup Script
 
-# Controls when the action will run. Triggers the workflow on deletion of branches. 
 on:
-  delete: # Trigger automatically when we do a deletion of a branch
-  workflow_dispatch: # Allow manual trigger of this workflow from the Actions tab
+  delete:
+  workflow_dispatch:
 
 env:
   DEPLOY_HOST: ${{ vars.OGD_STAGING_HOST }}
-  DEPLOY_DIR: ${{ vars.WSGI_PATH }}/${{ github.event.repository.name }}/${{ github.event.ref }}
-  DEPLOY_URL:  ${{ vars.OGD_STAGING_HOST }}/wsgi-bin/${{ github.event.repository.name }}/${{ github.event.ref }}
+  DEPLOY_DIR:              ${{ vars.API_BASE_PATH }}/${{ github.event.repository.name }}/${{ github.ref_name }}
+  DEPLOY_URL:  ${{ vars.OGD_STAGING_HOST }}/wsgi-bin/${{ github.event.repository.name }}/${{ github.ref_name }}
     
 jobs:
   branch_delete:
-    name: Dead Branch Cleanup of APIs
+    name: Deleted Branch Cleanup for Data API
     if: github.event.ref_type == 'branch'
     runs-on: ubuntu-22.04
     # concurrency:
@@ -21,16 +20,20 @@ jobs:
     #   cancel-in-progress: false
     
     steps:
+    - name: Announce Run
+      run: echo "Removing branch deploy of ${{ github.repository }}/${{ github.event.ref }} at ${{ env.DEPLOY_URL }} via ${{ github.actor }}"
 
     # 1. Local checkout & config
     
     # 2. Build 
 
     # 3. Remote config & clean
-    - name: Install OpenConnect
-      run: sudo apt-get -q update && sudo apt-get -q install openconnect
     - name: Connect to VPN
-      run: echo ${{ secrets.VPN_PASS }} | sudo openconnect --protocol=gp -u ${{ secrets.VPN_USER}} --passwd-on-stdin soe.vpn.wisc.edu &
+      uses: opengamedata/actions-openconnect-vpn@v1.1
+      with:
+        username: ${{ secrets.VPN_USER }}
+        password: ${{ secrets.VPN_PASS }}
+        endpoint: "soe.vpn.wisc.edu"
 
     - name: Setup Access Key
       run: |
@@ -39,13 +42,17 @@ jobs:
         chmod 600 ./key.txt
 
     - name: Remove branch folder
+<<<<<<< HEAD
       run: ssh -o StrictHostKeyChecking=no -T -i ./key.txt ${{ secrets.CLEAN_USER }}@${{ env.DEPLOY_HOST }} "rm -r ${{ env.DEPLOY_DIR }}"
     
     - name: Announce cleanup
       run: echo "Removed branch deploy at ${{ env.DEPLOY_URL }}"
+=======
+      run: ssh -o StrictHostKeyChecking=no -t -i ./key.txt ${{ secrets.CLEAN_USER }}@${{ env.DEPLOY_HOST }} "rm -r ${{ env.DEPLOY_DIR }}"
+>>>>>>> main
 
     - name: Upload logs as artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         path: ./*.log
     

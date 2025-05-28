@@ -1,5 +1,5 @@
-# Workflow to build and deploy designer dashboard to server.
-name: OpenGameData Features API Release Script
+# Workflow to build and deploy data API to "services" server.
+name: OGD Data API - Release Script
 on:
   workflow_dispatch:
   release:
@@ -12,14 +12,18 @@ env:
 
 jobs:
   ci_deploy:
-    name: CI Deploy of Feature APIs
+    name: CI Deploy of Data API
     runs-on: ubuntu-22.04
+    concurrency:
+      group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
+      cancel-in-progress: true
+    
     steps:
+    - name: Announce Run
+      run: echo "Deploying ${{ github.repository }} to ${{ env.DEPLOY_URL }} via ${{ github.actor }}"
 
   # 1. Local checkout & config
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'true'
+    - uses: actions/checkout@v4
     - name: Set up Config File
       uses: ./.github/actions/API_config
       with:
@@ -40,10 +44,12 @@ jobs:
   # 2. Build 
 
   # 3. Remote config & deploy
-    - name: Get OpenConnect installed
-      run: sudo apt-get -q update && sudo apt-get -q install openconnect
-    - name: Connect VPN
-      run: echo ${{ secrets.VPN_PASS }} | sudo openconnect --protocol=gp -u ${{ secrets.VPN_USER }} --passwd-on-stdin soe.vpn.wisc.edu &
+    - name: Connect to VPN
+      uses: opengamedata/actions-openconnect-vpn@v1.1
+      with:
+        username: ${{ secrets.VPN_USER }}
+        password: ${{ secrets.VPN_PASS }}
+        endpoint: "soe.vpn.wisc.edu"
 
     - name: Setup Access Key
       run: |
@@ -54,19 +60,20 @@ jobs:
       run: ssh -o StrictHostKeyChecking=no -T -i ./key.txt ${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "mkdir -p ${{ env.DEPLOY_DIR }}"
 
     - name: Upload to web server via rsync
-      uses: burnett01/rsync-deployments@5.2
+      uses: burnett01/rsync-deployments@7.0.1
       with:
         # switches:
         # -v : verbose output
         # -r : recurse into subdirectories
         # -c : use checksum to determine what files to update/skip
         # -t : preserve modification times
-        # --delete : delete extraneous files from destination directories
+        # -O : omit directory modification times
+        # --delete : NOT in use at moment; delete extraneous files from destination directories
         # --exclude-from : skip any files in rsync-exclude
         # --chmod : For each directory (D) and file (F), give user (u) and group (g) rwx permissions.
         #           Give others (o) only read permissions, plus execute for directories.
-        switches: -vrct --delete --exclude-from 'rsync-exclude' --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rwx,Fo=r
-        path: apps/features/*
+        switches: -vrctO --exclude-from 'rsync-exclude' --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rwx,Fo=r
+        path: src/*
         remote_path: ${{ env.DEPLOY_DIR }}
         remote_host: ${{ env.DEPLOY_HOST }}
         remote_user: ${{ secrets.DEPLOY_USER }}
@@ -79,8 +86,6 @@ jobs:
   # 4. Cleanup & complete
     - name: Trigger Graceful Reboot
       run: ssh -o StrictHostKeyChecking=no -T -i ./key.txt ${{ secrets.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "sudo systemctl restart apache2"
-    - name: Announce deploy
-      run: echo "Deployed to ${{ env.DEPLOY_URL }}"
     - name: Upload logs as artifacts
       uses: actions/upload-artifact@v2
       with:
