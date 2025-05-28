@@ -42,14 +42,7 @@ jobs:
         chmod 600 ./key.txt
 
     - name: Remove branch folder
-<<<<<<< HEAD
-      run: ssh -o StrictHostKeyChecking=no -T -i ./key.txt ${{ secrets.CLEAN_USER }}@${{ env.DEPLOY_HOST }} "rm -r ${{ env.DEPLOY_DIR }}"
-    
-    - name: Announce cleanup
-      run: echo "Removed branch deploy at ${{ env.DEPLOY_URL }}"
-=======
       run: ssh -o StrictHostKeyChecking=no -t -i ./key.txt ${{ secrets.CLEAN_USER }}@${{ env.DEPLOY_HOST }} "rm -r ${{ env.DEPLOY_DIR }}"
->>>>>>> main
 
     - name: Upload logs as artifacts
       uses: actions/upload-artifact@v4
