@@ -216,7 +216,7 @@ class PlayerAPI:
                         val={cols[i] : player[i] for i in range(ct)}
                     )
                 else:
-                    current_app.logger.warn(f"Couldn't find anything in result[player], result was:\n{ogd_result}")
+                    current_app.logger.warning(f"Couldn't find anything in result[player], result was:\n{ogd_result}")
                     ret_val.RequestErrored("No valid session features")
             finally:
                 return ret_val
@@ -229,7 +229,7 @@ class PlayerAPI:
                 if _player_id == target_id:
                     ret_val = _player
             if ret_val is None:
-                current_app.logger.warn(f"Didn't find {target_id} in list of player results, defaulting to first player in list (player ID={player_list[0]})")
+                current_app.logger.warning(f"Didn't find {target_id} in list of player results, defaulting to first player in list (player ID={player_list[0]})")
                 ret_val = player_list[0]
             return ret_val
 

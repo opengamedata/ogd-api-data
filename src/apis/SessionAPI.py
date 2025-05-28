@@ -206,7 +206,7 @@ class SessionAPI:
                 if _session_id == target_id:
                     ret_val = _session
             if ret_val is None:
-                current_app.logger.warn(f"Didn't find {target_id} in list of session results, defaulting to first session in list (session ID={session_list[0][0]})")
+                current_app.logger.warning(f"Didn't find {target_id} in list of session results, defaulting to first session in list (session ID={session_list[0][0]})")
                 ret_val = session_list[0]
             return ret_val
 

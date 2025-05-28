@@ -25,7 +25,7 @@ from ogd.core.interfaces.outerfaces.DictionaryOuterface import DictionaryOuterfa
 from ogd.core.managers.ExportManager import ExportManager
 from ogd.core.requests.Request import Request, ExporterRange
 from ogd.core.requests.RequestResult import RequestResult
-from ogd.core.schemas.ExportMode import ExportMode
+from ogd.core.models.enums.ExportMode import ExportMode
 from ogd.core.schemas.configs.ConfigSchema import ConfigSchema
 from ogd.core.schemas.configs.GameSourceSchema import GameSourceSchema
 from ogd.core.schemas.games.GameSchema import GameSchema
