@@ -12,7 +12,8 @@ from typing import Any, Dict, List
 # import 3rd-party libraries
 
 # import OGD libraries
-from ogd.core.schemas.configs.data_sources.MySQLSourceSchema import MySQLSchema
+from ogd.common.schemas.configs.data_sources.MySQLSourceSchema import MySQLSchema
+from ogd.common.utils.SemanticVersion import SemanticVersion
 from ogd.apis.schemas.ServerConfigSchema import ServerConfigSchema
 
 # import local files
@@ -33,7 +34,7 @@ class DataAPIConfigSchema(ServerConfigSchema):
 
         _used = {"DB_CONFIG", "OGD_CORE_PATH", "GOOGLE_CLIENT_ID"}
         _leftovers = { key : val for key,val in all_elements.items() if key not in _used }
-        super().__init__(name=name, all_elements=_leftovers, logger=logger)
+        super().__init__(name=name, debug_level=logging.INFO, version=SemanticVersion(0,0,0,"version-not-set"), other_elements=_leftovers)
 
     @property
     def GoogleClientID(self) -> str:
